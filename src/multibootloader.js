@@ -115,7 +115,7 @@ class MultiBootloader extends EventEmitter{
           this._emit('error', 'Could not read signal line');
           resolve(false);
         } else {
-          resolve(!status.dsr);
+          resolve(status.dsr);
         }
       });
     });
@@ -156,7 +156,7 @@ class MultiBootloader extends EventEmitter{
           this._sendStartMessage();
         })
         .catch(() => {
-          this._programPromise.reject('Timed out waiting for devices to be ready. (i.e. signal line)');
+          this._programPromise.reject('[PRE-START] Timed out waiting for devices to be ready. (i.e. signal line enabled)');
         });
       });
     });
@@ -203,7 +203,7 @@ class MultiBootloader extends EventEmitter{
             this._sendPageNumber();
           })
           .catch(() => {
-            this._programPromise.reject('Timed out waiting for devices to be ready. (i.e. signal line)');
+            this._programPromise.reject('[POST-START] Timed out waiting for devices to be ready. (i.e. signal line disabled)');
           });
         }
       );

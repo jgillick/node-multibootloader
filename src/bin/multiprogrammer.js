@@ -40,7 +40,7 @@ function programDevices() {
     baudRate: program.baud,
   }, (portErr) => {
     if (portErr) {
-      console.error('Error:', err);
+      console.error('Error:', portErr);
       return;
     }
 
@@ -61,9 +61,11 @@ function programDevices() {
     bootloader.program(program.args[0])
     .then(() => {
       console.log('Programming complete!');
+      process.exit();
     })
     .catch((err) => {
-      console.log(`FATAL ERROR: ${err.message}`);
+      console.log(`FATAL ERROR: ${err}`);
+      process.exit();
     });
 
   });
