@@ -1,0 +1,24 @@
+{
+    "extends": "airbnb",
+    "plugins": [
+        "import"
+    ],
+    "rules": {
+        "no-underscore-dangle": ["off"],
+        "func-names": ["off"],
+        "no-new": ["off"],
+        "import/no-extraneous-dependencies": ["error", {
+            "devDependencies": true
+        }],
+        "no-unused-expressions": ["off"],
+        "padded-blocks": ["off"],
+        "strict": ["off"],
+        "no-plusplus": ["off"],
+        "brace-style": ["off"],
+        "no-use-before-define": ["off"]
+    },
+    "env": {
+        "node": true,
+        "mocha": true
+    }
+}
