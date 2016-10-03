@@ -122,7 +122,7 @@ describe('Programming', function () {
 
     // Override serial function for signal state
     serial.get = function (cb) {
-      cb(null, { dsr: !signal });
+      cb(null, { dsr: signal });
     };
   });
 
