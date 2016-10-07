@@ -1,16 +1,17 @@
 
 import * as fs from 'fs';
-import {EventEmitter} from 'events';
-import {DiscoBusMaster} from 'discobus';
+import { EventEmitter } from 'events';
+import { DiscoBusMaster } from 'discobus';
+
 
 const MSG_START = 0xF1;
 const MSG_PAGE_NUM = 0xF2;
 const MSG_PAGE_DATA = 0xF3;
 const MSG_END = 0xF4;
 
-const MAX_RETRIES = 2;
-const TIME_BETWEEN_PAGES = 800;
-const SIGNAL_TIMEOUT = 1000
+const MAX_RETRIES = 3;
+const TIME_BETWEEN_PAGES = 20;
+const SIGNAL_TIMEOUT = 1000;
 
 /**
  * Sends a program over a serial connection to one or more
@@ -18,7 +19,7 @@ const SIGNAL_TIMEOUT = 1000
  *
  * @class
  */
-class MultiBootloader extends EventEmitter{
+class MultiBootloader extends EventEmitter {
 
   /**
    * Create a new boot loader with an open connection to the bus.
@@ -42,7 +43,7 @@ class MultiBootloader extends EventEmitter{
     this._serial = serial;
 
     this._pages = [];
-    this._currentPage = 0;
+    this._currentPage = -1;
     this._programTries = 0;
     this._errorAtPage = -1;
 
@@ -67,13 +68,17 @@ class MultiBootloader extends EventEmitter{
     this._disco = new DiscoBusMaster();
     this._disco.connectWith(serial);
 
+    this._disco.on('error', (err) => {
+      this._emit('error', `[discobus] ${err}`);
+    });
+
     // Normalize version numbers
     if (typeof this._opt.version !== 'undefined') {
       if (typeof this._opt.version.major === 'undefined') {
-        this._opt.version.major = 0
+        this._opt.version.major = 0;
       }
       if (typeof this._opt.version.minor === 'undefined') {
-        this._opt.version.minor = 0
+        this._opt.version.minor = 0;
       }
     }
     else {
@@ -109,7 +114,7 @@ class MultiBootloader extends EventEmitter{
    * @returns {Promise}
    */
   readSignalLine() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this._serial.get((err, status) => {
         if (err) {
           this._emit('error', 'Could not read signal line');
@@ -129,6 +134,8 @@ class MultiBootloader extends EventEmitter{
    * @return {Promise}
    */
   program(filepath) {
+    this._currentPage = -1;
+
     return new Promise((resolve, reject) => {
       this._programPromise = {
         resolve,
@@ -182,7 +189,6 @@ class MultiBootloader extends EventEmitter{
    * Send the start message and wait for signal line to become disabled
    */
   _sendStartMessage() {
-
     this._disco.startMessage(MSG_START, 2)
       .sendData([
         this._opt.version.major,
@@ -195,11 +201,11 @@ class MultiBootloader extends EventEmitter{
           this._programPromise.reject(`Error writing to serial device: ${err}`);
         },
         null,
-
         // Complete, now wait for the signal line to be disabled
         () => {
           this._untilSignal(false)
           .then(() => {
+            this._currentPage++;
             this._sendPageNumber();
           })
           .catch(() => {
@@ -213,8 +219,6 @@ class MultiBootloader extends EventEmitter{
    * Send the number of the upcoming page number
    */
   _sendPageNumber() {
-    this._currentPage++;
-
     this._disco.startMessage(MSG_PAGE_NUM, 1)
       .sendData([this._currentPage])
       .endMessage()
@@ -231,9 +235,9 @@ class MultiBootloader extends EventEmitter{
    * Write the next page of data to the devices
    */
   _sendNextPage() {
-    const page = this._pages[this._currentPage - 1];
+    const page = this._pages[this._currentPage];
 
-    this._emit('status', `Sending page ${this._currentPage}.`);
+    this._emit('status', `Sending page ${this._currentPage + 1} of ${this._pages.length}.`);
 
     // Send and pause before next page
     this._disco.startMessage(MSG_PAGE_DATA, page.length)
@@ -245,7 +249,9 @@ class MultiBootloader extends EventEmitter{
         },
         null,
         () => {
-          onToTheNextPage.bind(this)();
+          setTimeout(() => {
+            onToTheNextPage.bind(this)();
+          }, this._opt.timeBetweenPages);
         }
       );
 
@@ -263,19 +269,28 @@ class MultiBootloader extends EventEmitter{
         }
 
         // Have we sent all pages
-        if (this._currentPage >= this._pages.length) {
+        if (this._currentPage + 1 >= this._pages.length) {
 
           // Retry
           if (this._errorAtPage > -1) {
+            this._programTries++;
 
             if (this._programTries < this._opt.maxTries) {
-              this._programTries++;
-              this._currentPage = this._errorAtPage;
+              this._currentPage = this._errorAtPage - 1;
               this._errorAtPage = -1;
+
+              // If we've already retried, start at the top.
+              if (this._programTries > 1) {
+                this._currentPage = 0;
+              }
+              else if (this._currentPage < 0) {
+                this._currentPage++;
+              }
+
               this._sendNextPage();
             }
             else {
-              return this._programPromise.reject(`Programming retry limit reached.`);
+              return this._programPromise.reject('Max programming retries attempted.');
             }
           }
           // Finish
@@ -285,9 +300,8 @@ class MultiBootloader extends EventEmitter{
         }
         // Send next page
         else {
-          setTimeout(() => {
-            this._sendPageNumber();
-          }, this._opt.timeBetweenPages);
+          this._currentPage++;
+          this._sendPageNumber();
         }
       });
     }
@@ -300,8 +314,6 @@ class MultiBootloader extends EventEmitter{
 
     // Send twice, for good measure
     for (let i = 0; i < 2; i++) {
-      let complete;
-
       this._disco.startMessage(MSG_END, 0)
         .endMessage()
         .subscribe(
@@ -309,10 +321,13 @@ class MultiBootloader extends EventEmitter{
             this._programPromise.reject(`Error writing to serial device: ${err}`);
           },
           null,
-          complete
+          () => {
+            if (i === 1) {
+              this._emit('status', 'Finished programming');
+              this._programPromise.resolve();
+            }
+          }
         );
-
-      complete = this._programPromise.resolve;
     }
   }
 
@@ -344,11 +359,10 @@ class MultiBootloader extends EventEmitter{
             checkSignal(resolve, reject);
           }, delay);
         } else {
-          reject('timed out')
+          reject('timed out');
         }
       })
       .catch((err) => {
-        console.log('ERROR', err);
         reject(err);
       });
     };

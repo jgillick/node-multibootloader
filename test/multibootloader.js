@@ -88,12 +88,12 @@ describe('Programming', function () {
 
   // Wrap the endMessage method with something custom
   function wrapEndMessage(func) {
-    let origMeth = bootloader._disco.endMessage;
+    let origMethod = bootloader._disco.endMessage;
 
     bootloader._disco.endMessage = function() {
       let ret = bootloader._disco;
       try {
-        ret = origMeth.apply(bootloader._disco, arguments);
+        ret = origMethod.apply(bootloader._disco, arguments);
         func.apply(bootloader._disco, arguments);
       } catch(e) { }
       return ret;
@@ -154,14 +154,24 @@ describe('Programming', function () {
     signal = true;
 
     bootloader._sendPageNumber = () => {
-      const err = (signal !== false) ? 'Started before signal' : false;
-      done(err);
+      try {
+        expect(signal).to.be.equal(false);
+        done();
+      } catch (e) { done(e); }
     };
 
     bootloader.program('goodFile.hex');
 
     // Disable signal after 1 second
     setTimeout(() => { signal = false; }, 1000);
+  });
+
+  it('should end with a promise', function (done) {
+    signal = true;
+
+    autoSignal();
+    bootloader.program('goodFile.hex')
+    .then(done);
   });
 
   it('should send page number, pages and end message', function (done) {
@@ -171,7 +181,7 @@ describe('Programming', function () {
     signal = true;
     serial.buffer = [];
     autoSignal();
-    bootloader.program('goodFile.hex').then(() => done());
+    bootloader.program('goodFile.hex');
 
     // Ensure that page numbers and data line up
     wrapEndMessage(function () {
@@ -183,7 +193,7 @@ describe('Programming', function () {
           nextPage = data[0];
         }
         else if (cmd === MSG_PAGE_DATA) {
-          const dataStart = (nextPage - 1) * bootloader._opt.pageSize;
+          const dataStart = nextPage * bootloader._opt.pageSize;
           expect(data[0]).to.be.equal(dataStart);
         }
         else if (cmd === MSG_END && !finished) {

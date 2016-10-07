@@ -17,9 +17,10 @@ class SerialPortMock extends EventEmitter {
     this.emit('open');
   }
 
-  write(data) {
+  write(data, cb) {
     this.buffer.push.apply(this.buffer, data);
     this.emit('write', data);
+    cb();
   }
   drain(cb) {
     cb();
