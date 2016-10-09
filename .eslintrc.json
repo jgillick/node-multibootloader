@@ -16,7 +16,8 @@
         "no-plusplus": ["off"],
         "brace-style": ["off"],
         "no-use-before-define": ["off"],
-        "max-len": ["off"]
+        "max-len": ["off"],
+        "consistent-return": ["off"]
     },
     "env": {
         "node": true,

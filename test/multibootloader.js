@@ -80,13 +80,13 @@ describe('Programming', function () {
 
     serial.on('write', (data) => {
       const cmd = data[2];
-        if (cmd === MSG_START) {
+      if (cmd === MSG_START) {
         signal = false;
       }
     });
   }
 
-  // Wrap the endMessage method with something custom
+  // Wrap the DiscoBus endMessage method with something custom
   function wrapEndMessage(func) {
     let origMethod = bootloader._disco.endMessage;
 
@@ -95,7 +95,21 @@ describe('Programming', function () {
       try {
         ret = origMethod.apply(bootloader._disco, arguments);
         func.apply(bootloader._disco, arguments);
-      } catch(e) { }
+      } catch (e) { }
+      return ret;
+    };
+  }
+
+  // Wrap the DiscoBus sendData method with a custom function
+  function wrapSendData(func) {
+    let origMethod = bootloader._disco.sendData;
+
+    bootloader._disco.sendData = function() {
+      let ret = bootloader._disco;
+      try {
+        ret = origMethod.apply(bootloader._disco, arguments);
+        func.apply(bootloader._disco, arguments);
+      } catch (e) { }
       return ret;
     };
   }
@@ -172,6 +186,26 @@ describe('Programming', function () {
     autoSignal();
     bootloader.program('goodFile.hex')
     .then(done);
+  });
+
+  it('should send the correct bytes', function(done) {
+    let lastPage;
+
+    autoSignal();
+    bootloader.program('goodFile.hex').then(done);
+
+    wrapSendData(function (data) {
+      try {
+        if (this._msgCommand === 0xF3) {
+          if (lastPage) {
+            // First byte of this page should be 1 greater than
+            // the last byte from the last page.
+            expect(lastPage[lastPage.length - 1]).to.be.equal(data[0] - 1);
+          }
+          lastPage = data;
+        }
+      } catch (e) { done(e); }
+    });
   });
 
   it('should send page number, pages and end message', function (done) {
