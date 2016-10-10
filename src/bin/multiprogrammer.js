@@ -82,7 +82,7 @@ function runBootloader(port) {
   terminal.eraseLine();
   const progress = terminal.progressBar({
     title: 'Sending',
-    percent: true
+    percent: true,
   });
   terminal.nextLine(2);
   linesAfterProgress = 1;
@@ -91,6 +91,7 @@ function runBootloader(port) {
   const bootloader = new MultiBootloader(port, {
     version,
     pageSize: config.pageSize,
+    signalTimeout: 3000,
   });
 
   // Events

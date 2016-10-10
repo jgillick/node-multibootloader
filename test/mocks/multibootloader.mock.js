@@ -4,7 +4,7 @@ const proxyquire = require('proxyquire');
 
 require('source-map-support').install();
 
-var fsStub = {
+const fsStub = {
   readFile: function (path, callback) {
 
     // Return error
@@ -22,6 +22,13 @@ var fsStub = {
   }
 };
 
+const intelHexStub = {
+  parse: function(data) {
+    return data;
+  }
+}
+
 module.exports = proxyquire('../../dist/multibootloader', {
   fs: fsStub,
+  'intel-hex': intelHexStub,
 });

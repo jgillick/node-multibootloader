@@ -1,5 +1,6 @@
 
 import * as fs from 'fs';
+import * as intelHex from 'intel-hex';
 import { EventEmitter } from 'events';
 import { DiscoBusMaster } from 'discobus';
 
@@ -143,9 +144,18 @@ class MultiBootloader extends EventEmitter {
       };
 
       // Read file
-      fs.readFile(filepath, (err, content) => {
+      fs.readFile(filepath, (err, hexContent) => {
         if (err) {
           reject(err);
+          return;
+        }
+
+        // Convert from intel hex format
+        let content;
+        try {
+          content = intelHex.parse(hexContent).data;
+        } catch (e) {
+          reject(`Could not parse file. Is it not an Intel Hex formatted file? (${e})`)
           return;
         }
 
@@ -163,7 +173,7 @@ class MultiBootloader extends EventEmitter {
           this._sendStartMessage();
         })
         .catch(() => {
-          this._programPromise.reject('[PRE-START] Timed out waiting for devices to be ready. (i.e. signal line enabled)');
+          reject('[PRE-START] Timed out waiting for devices to be ready. (i.e. signal line enabled)');
         });
       });
     });
