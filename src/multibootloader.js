@@ -158,6 +158,9 @@ class MultiBootloader extends EventEmitter {
           reject(`Could not parse file. Is it not an Intel Hex formatted file? (${e})`)
           return;
         }
+        if (!content) {
+          reject(`There was a problem parsing the hex file ${filepath}`)
+        }
 
         // Break up content by pages
         for (let i = 0; i < content.length; i += this._opt.pageSize) {

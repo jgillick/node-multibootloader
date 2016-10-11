@@ -23,10 +23,10 @@ const fsStub = {
 };
 
 const intelHexStub = {
-  parse: function(data) {
-    return data;
+  parse: (data) => {
+    return { data: data };
   }
-}
+};
 
 module.exports = proxyquire('../../dist/multibootloader', {
   fs: fsStub,
