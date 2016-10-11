@@ -5,6 +5,13 @@
 Program many devices at once over a multidrop bus, like RS485. This was written with AVR devices in mind, via the [AVR Multidrop Bootloader](https://github.com/jgillick/avr-multidrop-bootloader), but it can be usable for other devices that have
 adapted that bootloader.
 
+ * [CLI Interface](#cli-interface)
+   * [Examples](#examples)
+ * [API](#api)
+   * [MultiBootloader(serial, options)](#multibootloaderserial-options)
+   * [readSignalLine()](#readsignalline)
+   * [Example using the API](#example-using-the-api)
+
 ## CLI Interface
 
 ```
