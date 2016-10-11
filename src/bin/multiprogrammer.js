@@ -6,7 +6,7 @@ import { DiscoBusMaster } from 'discobus';
 import SerialPort from 'serialport';
 import config from 'commander';
 import { terminal } from 'terminal-kit';
-import MultiBootloader from '../multibootloader';
+import MultiBootloader from 'multibootloader';
 
 require('source-map-support').install();
 
