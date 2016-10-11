@@ -10,7 +10,7 @@ adapted that bootloader.
  * [API](#api)
    * [MultiBootloader(serial, options)](#multibootloaderserial-options)
    * [readSignalLine()](#readsignalline)
-   * [Example using the API](#example-using-the-api)
+ * [Example using the API](#example-using-the-api)
 
 ## CLI Interface
 
