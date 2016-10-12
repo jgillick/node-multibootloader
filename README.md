@@ -5,12 +5,19 @@
 Program many devices at once over a multidrop bus, like RS485. This was written with AVR devices in mind, via the [AVR Multidrop Bootloader](https://github.com/jgillick/avr-multidrop-bootloader), but it can be usable for other devices that have
 adapted that bootloader.
 
+ * [Install](#install)
  * [CLI Interface](#cli-interface)
    * [Examples](#examples)
  * [API](#api)
    * [MultiBootloader(serial, options)](#multibootloaderserial-options)
    * [readSignalLine()](#readsignalline)
  * [Example using the API](#example-using-the-api)
+
+## Install
+
+```
+sudo npm install multibootloader -g
+```
 
 ## CLI Interface
 
@@ -37,7 +44,7 @@ adapted that bootloader.
 ```bash
 multiprogrammer --baud 115200 --device /dev/cu.usbDevice0 -page-size 128
 ```
-This is the most basic usage, which passes the device, baud speed and the device page size. 
+This is the most basic usage, which passes the device, baud speed and the device page size.
 
 **IMPORTANT** Page size will be different for all devices. Check your device's datasheet and look for "page size" and enter this value in _**bytes**_, not words. In the [Atmega328](http://www.atmel.com/Images/Atmel-42735-8-bit-AVR-Microcontroller-ATmega328-328P_datasheet.pdf) datasheet it's listed in section `31.5` as 64 words, which would be **128 bytes**.
 
@@ -52,7 +59,7 @@ multiprogrammer --baud 115200 --device /dev/cu.usbDevice0 -page-size 128 --comma
 In this example, the programmer will first send the disco bus message `0xF0` to all devices. Then, normal programming
 will continue after a 1 second delay.
 
-The main program in these devices will need to watch for this message, and then swtich to the bootloader programming mode. 
+The main program in these devices will need to watch for this message, and then swtich to the bootloader programming mode.
 You can see an example of a program that does this [here](https://github.com/jgillick/avr-multidrop-bootloader/tree/master/test_program).
 
 ## API
@@ -74,7 +81,7 @@ _**Parameters**_
 
 ### readSignalLine()
 
-Detects the signal line, which is used to detect if there are errors in programming. 
+Detects the signal line, which is used to detect if there are errors in programming.
 By defualt this looks at the `DSR` line on the serial connection, but this method can be overriden to detect the state another way.
 
 Currently the SerialPort library does not support reading the `DSR` value. Until that support is added, you can use [my fork](https://github.com/jgillick/node-serialport/) of their library.
@@ -85,13 +92,13 @@ Program all devices with this HEX program file. **NOTE**: This must be in Intel 
 
 _**Parameters**_:
  * _filepath_: The path to the hex file to progrm the devices with.
- 
+
 ## Example using the API
 
 ```js
 var Multibootloader = require('../multibootloader');
 
-// NOTE: this needs to use, this fork of the library to suppor the signal line reading: 
+// NOTE: this needs to use, this fork of the library to suppor the signal line reading:
 // https://github.com/jgillick/node-serialport/
 var Serialport = require('serialport');
 
@@ -102,18 +109,18 @@ const PAGE_SIZE = 128; // 64 words - atmega328
 const programFile = './test_program.hex';
 
 // Open serial port
-const port = new SerialPort(PORT_NAME, 
-  { baudRate: PORT_BAUD }, 
+const port = new SerialPort(PORT_NAME,
+  { baudRate: PORT_BAUD },
   (portErr) => {
     if (portErr) {
       console.error('Error:', portErr);
       return;
     }
-    
+
     const bootloader = new MultiBootloader(port, {
       pageSize: PAGE_SIZE
     });
-    
+
     // Listen to programming events
     bootloader.on('status', (status) => {
       console.log(status.message);
@@ -121,7 +128,7 @@ const port = new SerialPort(PORT_NAME,
     bootloader.on('error', (err) => {
       console.log(err.message);
     });
-    
+
     // Program
     bootloader.program(config.args[0])
     .then(() => {
@@ -129,7 +136,7 @@ const port = new SerialPort(PORT_NAME,
     })
     .catch((err) => {
       console.error(`FATAL ERROR: ${err}`);
-    });    
+    });
 });
 
 
