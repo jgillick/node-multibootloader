@@ -14,6 +14,9 @@
     "build_watch": "babel src --out-dir dist -s --watch",
     "coverage": "istanbul cover --print both _mocha"
   },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jgillick/node-avr-multibootloader.git"
