@@ -1,16 +1,20 @@
 {
   "name": "avr-multibootloader",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "An AVR bootloader that can program many devices over a multidrop bus (like RS485).",
-  "main": "dist/MultiBootloader.js",
+  "main": "dist/multibootloader.js",
   "bin": {
-    "multiprogrammer": "dist/multiprogrammer"
+    "multiprogrammer": "dist/bin/multiprogrammer"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "prepublish": "npm run build",
     "test": "node_modules/mocha/bin/mocha",
     "test_watch": "node_modules/mocha/bin/mocha --watch",
-    "build": "babel src --out-dir dist -s",
+    "clean": "rm -r dist",
+    "build": "npm run clean; babel src --out-dir dist -s; mv -v dist/bin/multiprogrammer.js dist/bin/multiprogrammer",
     "build_watch": "babel src --out-dir dist -s --watch",
     "coverage": "istanbul cover --print both _mocha"
   },
@@ -41,8 +45,7 @@
     "mocha": "^3.1.0",
     "proxyquire": "^1.7.10",
     "sinon": "^1.17.6",
-    "sinon-chai": "^2.8.0",
-    "source-map-support": "^0.4.3"
+    "sinon-chai": "^2.8.0"
   },
   "dependencies": {
     "commander": "^2.9.0",
@@ -50,7 +53,8 @@
     "intel-hex": "^0.1.1",
     "rxjs": "^5.0.0-beta.12",
     "serialport": "git+https://github.com/jgillick/node-serialport.git",
-    "terminal-kit": "^0.24.30"
+    "terminal-kit": "^0.24.30",
+    "source-map-support": "^0.4.3"
   },
   "babel": {
     "presets": [
