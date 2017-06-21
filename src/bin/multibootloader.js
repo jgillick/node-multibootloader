@@ -6,30 +6,65 @@ import { DiscoBusMaster } from 'discobus';
 import SerialPort from 'serialport';
 import config from 'commander';
 import { terminal } from 'terminal-kit';
-import MultiBootloader from '../multibootloader';
+import MultiBootloader from '../lib';
 
 require('source-map-support').install();
 
-config
-  .usage('[options] <file ...>')
-  .description('Send a file to all devices on a serial bus.')
-  .option('-l, --list', 'List all serial devices')
-  .option('-b, --baud <number>', 'Baud rate to the serial device', parseInt)
-  .option('-d, --device <name>', 'The serial device to connect to')
-  .option('-s, --page-size <number>', 'The programming page size for your device.', parseInt)
-  .option('-v, --version <maj.min>', 'The major.minor version of your program (for example 1.5)')
-  .option('-c, --command <number>', 'The Disco Bus message command that puts the devices into the bootloader.')
-  .option('<file ...>', 'The file to program to your devices')
-  .parse(process.argv);
+const DEFAULT_TIMEOUT = 5000;
 
+/**
+ * Run program
+ */
+function main() {
+  parseArgs();
 
-function programDevices() {
+  // List ports
+  if (config.list) {
+    SerialPort.list((err, ports) => {
+      ports.forEach(port => console.log(port.comName));
+      process.exit();
+    });
+  }
 
   // Missing required options
-  if (!config.baud || !config.device || !config.pageSize || config.args.length === 0) {
+  else if (!config.baud || !config.device || !config.pageSize || config.args.length === 0) {
     config.outputHelp();
     process.exit();
   }
+
+  // Program
+  else {
+    programDevices();
+  }
+}
+
+
+/**
+ * Parse command line arguments
+ */
+function parseArgs() {
+  const pkg = require('../../package.json');
+
+  config
+    .usage('[options] <file ...>')
+    .description('Send a file to all devices on a serial bus.')
+    .version(pkg.version)
+    .option('-l, --list', 'List all serial devices')
+    .option('-b, --baud <number>', 'Baud rate to the serial device', parseInt)
+    .option('-c, --command <number>', 'The Disco Bus message command that puts the devices into the bootloader.')
+    .option('-d, --device <name>', 'The serial device to connect to')
+    .option('-s, --page-size <number>', 'The programming page size for your device.', parseInt)
+    .option('-p, --prog-version <maj.min>', 'The major.minor version of your program (for example 1.5)')
+    .option('-t, --timeout <number>', 'How long to wait for devices to be ready for programming')
+    .option('<file ...>', 'The file to program to your devices')
+    .parse(process.argv);
+}
+
+
+/**
+ * Kick off the programmer
+ */
+function programDevices() {
 
   // Connect to port
   const port = new SerialPort(config.device, {
@@ -49,6 +84,12 @@ function programDevices() {
   });
 }
 
+
+/**
+ * Send the single-byte command to the bus, which will put all the devices in their
+ * bootloader programming mode.
+ * @param  {SerialPort} port - The serial port to the bus
+ */
 function sendBootloadCommand(port) {
   const cmd = Number(config.command);
   const disco = new DiscoBusMaster();
@@ -63,19 +104,16 @@ function sendBootloadCommand(port) {
     );
 }
 
+
+/**
+ * Send the program to all the devices on the bus.
+ * @param  {SerialPort} port - The serial port to the bus.
+ */
 function runBootloader(port) {
   let linesAfterProgress = 0;
+  const timeout = Number(config.timeout || DEFAULT_TIMEOUT);
+  const version = parseProgVersion();
   console.log('Running bootloader');
-
-  // Parse version
-  let version = null;
-  if (config.version && config.version.indexOf('.') > 0) {
-    const verParts = config.version.split('.');
-    version = {
-      major: parseInt(verParts[0], 10),
-      minor: parseInt(verParts[1], 10),
-    };
-  }
 
   // Progress bar
   terminal.previousLine(1);
@@ -91,7 +129,7 @@ function runBootloader(port) {
   const bootloader = new MultiBootloader(port, {
     version,
     pageSize: config.pageSize,
-    signalTimeout: 3000,
+    signalTimeout: timeout,
   });
 
   // Events
@@ -135,19 +173,22 @@ function runBootloader(port) {
   });
 }
 
-function main() {
 
-  // List ports
-  if (config.list) {
-    SerialPort.list((err, ports) => {
-      ports.forEach(port => console.log(port.comName));
-    });
+/**
+ * Parse the program version passed in via the command line, and
+ * either return an object with `major` and `minor` numbers, or null.
+ *
+ * @returns {Object} An object with `major` and `minor` version parsed.
+ */
+function parseProgVersion() {
+  if (config.progVersion && config.progVersion.indexOf('.') > 0) {
+    const verParts = config.progVersion.split('.');
+    return {
+      major: parseInt(verParts[0], 10),
+      minor: parseInt(verParts[1], 10),
+    };
   }
-
-  // Program
-  else {
-    programDevices();
-  }
+  return null;
 }
 
 main();

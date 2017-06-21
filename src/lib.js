@@ -12,7 +12,7 @@ const MSG_END = 0xF4;
 
 const MAX_RETRIES = 3;
 const TIME_BETWEEN_PAGES = 20;
-const SIGNAL_TIMEOUT = 1000;
+const SIGNAL_TIMEOUT = 3000;
 
 /**
  * Sends a program over a serial connection to one or more
@@ -155,7 +155,7 @@ class MultiBootloader extends EventEmitter {
         try {
           content = intelHex.parse(hexContent).data;
         } catch (e) {
-          reject(`Could not parse file. Is it not an Intel Hex formatted file? (${e})`)
+          reject(`Could not parse file. Is it a Intel Hex formatted file? (${e})`)
           return;
         }
         if (!content) {
@@ -168,15 +168,15 @@ class MultiBootloader extends EventEmitter {
           this._pages.push(pageData);
         }
 
-        this._emit('status', `Program file read. ${content.length} bytes, ${this._pages.length} pages.`);
+        this._emit('status', `Program file read: ${this._pages.length} pages (${content.length} bytes)`);
 
         // Wait for signal line to be enabled, then start message
         this._untilSignal(true)
         .then(() => {
           this._sendStartMessage();
         })
-        .catch(() => {
-          reject('[PRE-START] Timed out waiting for devices to be ready. (i.e. signal line enabled)');
+        .catch((err) => {
+          reject(`ERROR: Could not establish a ready connection with the first device (${err})`);
         });
       });
     });
@@ -378,7 +378,7 @@ class MultiBootloader extends EventEmitter {
       .catch((err) => {
         reject(err);
       });
-    };
+    }
 
     return new Promise((resolve, reject) => {
       checkSignal(resolve, reject);

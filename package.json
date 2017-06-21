@@ -2,9 +2,9 @@
   "name": "avr-multibootloader",
   "version": "1.0.4",
   "description": "An AVR bootloader that can program many devices over a multidrop bus (like RS485).",
-  "main": "dist/multibootloader.js",
+  "main": "dist/lib.js",
   "bin": {
-    "multiprogrammer": "dist/bin/multiprogrammer"
+    "multibootloader": "dist/bin/multibootloader.js"
   },
   "files": [
     "dist"
@@ -13,8 +13,8 @@
     "prepublish": "npm run build",
     "test": "node_modules/mocha/bin/mocha",
     "test_watch": "node_modules/mocha/bin/mocha --watch",
-    "clean": "rm -r dist",
-    "build": "npm run clean; babel src --out-dir dist -s; mv -v dist/bin/multiprogrammer.js dist/bin/multiprogrammer",
+    "clean": "rm -r dist || true",
+    "build": "npm run clean; babel src --out-dir dist -s",
     "build_watch": "babel src --out-dir dist -s --watch",
     "coverage": "istanbul cover --print both _mocha"
   },

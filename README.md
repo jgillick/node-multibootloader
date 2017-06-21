@@ -16,33 +16,34 @@ adapted that bootloader.
 ## Install
 
 ```
-sudo npm install multibootloader -g
+sudo npm install avr-multibootloader -g
 ```
 
 ## CLI Interface
 
 ```
-  Usage: multiprogrammer [options] <file ...>
+  Usage: multibootloader [options] <file ...>
 
   Send a file to all devices on a serial bus.
 
   Options:
 
-    -h, --help                output usage information
-    -l, --list                List all serial devices
-    -b, --baud <number>       Baud rate to the serial device
-    -d, --device <name>       The serial device to connect to
-    -s, --page-size <number>  The programming page size for your device.
-    -v, --version <maj.min>   The major.minor version of your program (for example 1.5)
-    -c, --command <number>    The Disco Bus message command that puts the devices into the bootloader.
-    <file ...>                The file to program to your devices
+    -h, --help                    output usage information
+    -V, --version                 output the version number
+    -l, --list                    List all serial devices
+    -b, --baud <number>           Baud rate to the serial device
+    -d, --device <name>           The serial device to connect to
+    -s, --page-size <number>      The programming page size for your device.
+    -c, --command <number>        The Disco Bus message command that puts the devices into the bootloader.
+    -p, --prog-version <maj.min>  The major.minor version of your program (for example 1.5)
+    <file ...>                    The file to program to your devices
 ```
 
 ### Examples
 
 #### Basic Programming
 ```bash
-multiprogrammer --baud 115200 --device /dev/cu.usbDevice0 -page-size 128
+multibootloader --baud 115200 --device /dev/cu.usbDevice0 --page-size 128
 ```
 This is the most basic usage, which passes the device, baud speed and the device page size.
 
@@ -53,7 +54,7 @@ This is the most basic usage, which passes the device, baud speed and the device
 You can pass a pre-command that will be sent as a disco bus message to trigger the device into programming mode.
 
 ```bash
-multiprogrammer --baud 115200 --device /dev/cu.usbDevice0 -page-size 128 --command 0xF0
+multibootloader --baud 115200 --device /dev/cu.usbDevice0 --page-size 128 --command 0xF0
 ```
 
 In this example, the programmer will first send the disco bus message `0xF0` to all devices. Then, normal programming
@@ -96,11 +97,11 @@ _**Parameters**_:
 ## Example using the API
 
 ```js
-var Multibootloader = require('../multibootloader');
+const Multibootloader = require('avr-multibootloader');
 
-// NOTE: this needs to use, this fork of the library to suppor the signal line reading:
-// https://github.com/jgillick/node-serialport/
-var Serialport = require('serialport');
+// NOTE: this needs to use, my fork of the library to support the signal line reading (until v5.0.0 is stable):
+// npm install https://github.com/jgillick/node-serialport/
+const Serialport = require('serialport');
 
 const PORT_NAME = '/dev/cu.usbDevice0'
 const PORT_BAUD = 115200
@@ -109,14 +110,14 @@ const PAGE_SIZE = 128; // 64 words - atmega328
 const programFile = './test_program.hex';
 
 // Open serial port
-const port = new SerialPort(PORT_NAME,
-  { baudRate: PORT_BAUD },
+const port = new SerialPort(PORT_NAME, { baudRate: PORT_BAUD },
   (portErr) => {
     if (portErr) {
       console.error('Error:', portErr);
       return;
     }
 
+    // Create programmer
     const bootloader = new MultiBootloader(port, {
       pageSize: PAGE_SIZE
     });
