@@ -94,7 +94,7 @@ function sendBootloadCommand(port) {
   const cmd = Number(config.command);
   const disco = new DiscoBusMaster();
 
-  console.log(`Sending booloading command 0x${cmd.toString(16).toUpperCase()}`);
+  console.log(`Sending bootloading command 0x${cmd.toString(16).toUpperCase()}`);
 
   disco.connectWith(port);
   disco.startMessage(cmd, 0)

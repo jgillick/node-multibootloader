@@ -14,7 +14,7 @@
     "test": "node_modules/mocha/bin/mocha",
     "test_watch": "node_modules/mocha/bin/mocha --watch",
     "clean": "rm -r dist || true",
-    "build": "npm run clean; babel src --out-dir dist -s",
+    "build": "npm run clean; babel src --out-dir dist -s; chmod 755 dist/bin/multibootloader.js",
     "build_watch": "babel src --out-dir dist -s --watch",
     "coverage": "istanbul cover --print both _mocha"
   },
@@ -34,27 +34,27 @@
   },
   "homepage": "https://github.com/jgillick/node-avr-multibootloader#readme",
   "devDependencies": {
-    "babel-cli": "^6.16.0",
-    "babel-preset-es2015": "^6.16.0",
+    "babel-cli": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
     "chai": "^3.5.0",
-    "eslint": "^3.7.0",
+    "eslint": "^3.19.0",
     "eslint-config-airbnb": "^12.0.0",
     "eslint-plugin-import": "^1.16.0",
-    "eslint-plugin-jsx-a11y": "^2.2.2",
-    "eslint-plugin-react": "^6.3.0",
-    "mocha": "^3.1.0",
-    "proxyquire": "^1.7.10",
-    "sinon": "^1.17.6",
-    "sinon-chai": "^2.8.0"
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.10.3",
+    "mocha": "^3.4.2",
+    "proxyquire": "^1.8.0",
+    "sinon": "^1.17.7",
+    "sinon-chai": "^2.11.0"
   },
   "dependencies": {
     "commander": "^2.9.0",
     "discobus": "^1.0.0",
     "intel-hex": "^0.1.1",
-    "rxjs": "^5.0.0-beta.12",
+    "rxjs": "^5.4.1",
     "serialport": "git+https://github.com/jgillick/node-serialport.git",
-    "terminal-kit": "^0.24.30",
-    "source-map-support": "^0.4.3"
+    "source-map-support": "^0.4.15",
+    "terminal-kit": "^0.24.30"
   },
   "babel": {
     "presets": [
