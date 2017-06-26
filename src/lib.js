@@ -272,9 +272,16 @@ class MultiBootloader extends EventEmitter {
     // Send the next page
     function onToTheNextPage() {
 
+      // Signal timeout counter
+      const signalTimeout = setTimeout(() => {
+        this._emit('error', 'Timed out waiting for signal line to confirm previous page.');
+        this._finish();
+      }, SIGNAL_TIMEOUT)
+
       // Check signal line for error (it not already raised)
       this.readSignalLine()
       .then((enabled) => {
+        clearTimeout(signalTimeout);
 
         if (enabled === true && this._errorAtPage < 0) {
           this._errorAtPage = this._currentPage;

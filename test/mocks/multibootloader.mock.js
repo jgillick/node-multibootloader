@@ -28,7 +28,7 @@ const intelHexStub = {
   }
 };
 
-module.exports = proxyquire('../../dist/multibootloader', {
+module.exports = proxyquire('../../dist/lib', {
   fs: fsStub,
   'intel-hex': intelHexStub,
 });
